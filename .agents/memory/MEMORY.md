@@ -1,0 +1,1 @@
+- [Nexora Flow product direction](nexora-flow-product.md) — A simple, action-first CRM for small businesses worldwide, focused on customer context, sales opportunities, and follow-ups.

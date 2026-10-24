@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nexora Flow"
+description = "A simple, action-first CRM for small businesses to organize customer relationships, manage opportunities, and stay on top of follow-ups."
+version = "1.0.0"
+id = "artifacts/nexora-flow"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20007
+
+[services.development]
+run = "pnpm --filter @workspace/nexora-flow run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexora-flow", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nexora-flow/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20007"
+BASE_PATH = "/"

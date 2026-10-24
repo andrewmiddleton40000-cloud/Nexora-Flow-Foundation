@@ -1,1 +1,2 @@
 - [Nexora Flow product direction](nexora-flow-product.md) — A simple, action-first CRM for small businesses worldwide, focused on customer context, sales opportunities, and follow-ups.
+- [Orval runtime compatibility](orval-runtime.md) — API code generation needs a Node runtime with `Map.groupBy`; the shell may differ from the repo's pinned runtime.

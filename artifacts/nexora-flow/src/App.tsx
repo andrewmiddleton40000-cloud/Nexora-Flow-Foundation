@@ -13,6 +13,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CrmRoute } from '@/components/crm-pages';
+import { AssistantPage as AssistantWorkspacePage } from '@/components/assistant-page';
 
 const queryClient = new QueryClient();
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -423,8 +424,18 @@ function TasksPage() {
   return <div className="page-enter"><PageHeading eyebrow="Follow-through" title="Tasks" description="Small promises, remembered. Keep your next customer follow-up close." action={<Button disabled title="Task creation is not available yet"><Plus size={16} />Add task</Button>} /><div className="mt-7 flex flex-wrap gap-2">{['All tasks','Upcoming','Completed'].map((filter,i)=><button disabled key={filter} className={`rounded-lg px-3 py-2 text-xs font-semibold ${i===0?'bg-[#e9efdf] text-[#516044]':'bg-white text-[#8b9287] border border-[#e4e6dc]'} disabled:cursor-not-allowed`}>{filter}</button>)}</div><BlankPanel icon={ListTodo} title="Nothing to follow up on yet" description="Tasks help you remember the next useful move with a customer. They’ll show here when you have some." /></div>;
 }
 
-function AssistantPage() {
-  return <div className="page-enter"><PageHeading eyebrow="Nexora assistant" title="A little help, soon." description="The assistant is not available yet. Your customer workspace works without it." /><div className="mt-8 overflow-hidden rounded-[24px] border border-[#e3e5dc] bg-white"><div className="flex items-center gap-3 border-b border-[#e9ebe3] px-5 py-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#202822] text-[#c8f05b]"><Sparkles size={17}/></span><div><p className="text-sm font-bold">Nexora assistant</p><p className="mt-0.5 text-[10px] text-[#91988d]">Unavailable</p></div><span className="ml-auto rounded-full bg-[#f1f1eb] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#8a9086]">Coming later</span></div><div className="grid min-h-[300px] place-items-center px-6 py-12 text-center"><div className="max-w-md"><span className="mx-auto grid h-14 w-14 place-items-center rounded-[18px] bg-[#f0f3e8] text-[#788768]"><MessageCircleMore size={23}/></span><h2 className="display-font mt-5 text-xl font-semibold tracking-[-.035em]">Not quite ready to help out.</h2><p className="mt-2 text-sm leading-6 text-[#7b8378]">The future assistant is unavailable right now. We’ll make it clear when it’s ready; nothing here is pretending to be live.</p></div></div></div></div>;
+function AssistantRoute() {
+  const auth = useAuth();
+  if (!auth.client || !auth.workspace?.workspace_id || !auth.session?.access_token) {
+    return <LoadingScreen label="Opening the assistant" />;
+  }
+  return (
+    <AssistantWorkspacePage
+      client={auth.client}
+      workspaceId={auth.workspace.workspace_id}
+      accessToken={auth.session.access_token}
+    />
+  );
 }
 
 function SettingsPage() {
@@ -465,7 +476,7 @@ function Router() {
     <Route path="/app/companies">{() => <AuthShell><CrmRouteGate kind="companies" /></AuthShell>}</Route>
     <Route path="/app/deals">{() => <AuthShell><DealsPage /></AuthShell>}</Route>
     <Route path="/app/tasks">{() => <AuthShell><TasksPage /></AuthShell>}</Route>
-    <Route path="/app/assistant">{() => <AuthShell><AssistantPage /></AuthShell>}</Route>
+    <Route path="/app/assistant">{() => <AuthShell><AssistantRoute /></AuthShell>}</Route>
     <Route path="/app/settings">{() => <AuthShell><SettingsPage /></AuthShell>}</Route>
     <Route>{() => <NotFoundPage />}</Route>
   </Switch></RoutedErrorBoundary>;

@@ -1,44 +1,57 @@
-# [Project name]
+# Nexora Flow
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+An action-first CRM that helps small businesses organize customer relationships, opportunities, and follow-ups.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Run the `artifacts/nexora-flow: web` and `artifacts/api-server: API Server` managed workflows for the preview and API.
+- Apply Supabase migrations only after linking the intended project: `supabase link --project-ref YOUR_PROJECT_REF && supabase db push`
+- Browser env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- API env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `LLM_API_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- pnpm workspaces, Node.js 20, TypeScript 5.9
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- CRM database and auth: Supabase Auth + PostgreSQL row-level security
+- API validation: generated Zod schemas from OpenAPI
 - API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- API build: esbuild
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/nexora-flow` — React/Vite web app
+- `artifacts/api-server` — shared Express API, including the authenticated AI assistant routes
+- `lib/api-spec/openapi.yaml` — API contract source of truth
+- `lib/api-zod` — generated API validation schemas
+- `supabase/migrations` — workspace authorization, CRM schema, and AI usage controls
+- `artifacts/nexora-flow/SETUP.md` — Supabase and assistant configuration details
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The assistant uses an OpenAI-compatible chat-completions endpoint configured only on the API server; the provider key is never sent to the browser.
+- CRM records are fetched with the signed-in user's Supabase token so existing row-level security remains the authorization boundary.
+- Assistant requests do not send email or mutate CRM records; outputs are drafts and suggestions for the user to review.
+- The assistant stores only plan usage and short-window request counts, not prompts or generated content.
+- Default daily quotas are 10 (free), 100 (growth), and 500 (pro) requests per workspace; the API also allows 10 requests per user per 15 minutes.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Nexora Flow keeps customer context, sales opportunities, and next actions in one approachable workspace. Its assistant can summarize a selected contact, draft a follow-up email, or suggest next steps using authorized CRM records.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+Do not invent customer history. Keep email drafts and suggested record changes under user review.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Configure all five API environment variables before the assistant can generate content. Store `LLM_API_KEY` in Replit Secrets, not in a Vite variable or committed file.
+- Apply the new AI usage migration to the intended Supabase project before testing assistant usage; do not push migrations until the project is linked intentionally.
+- The LLM API base URL must use HTTPS and expose an OpenAI-compatible `/chat/completions` route (HTTP localhost is allowed only in development).
 
 ## Pointers
 

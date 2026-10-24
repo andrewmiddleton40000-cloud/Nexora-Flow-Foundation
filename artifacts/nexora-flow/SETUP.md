@@ -30,6 +30,28 @@ Contact and company deletion and tag deletion require the workspace owner or an 
 
 No service-role key is required by this foundation. Do not add one to the browser app.
 
+## AI assistant
+
+The assistant is served by `artifacts/api-server` and uses a configurable, OpenAI-compatible chat-completions endpoint. It does not use a Replit proxy or any hardcoded provider credential.
+
+Set these environment variables on the API server only:
+
+| Variable | Purpose |
+| --- | --- |
+| `SUPABASE_URL` | Supabase project URL used by the server to validate signed-in sessions |
+| `SUPABASE_ANON_KEY` | Supabase anon/publishable key; CRM reads still run with the user's access token and row-level security |
+| `LLM_API_BASE_URL` | HTTPS base URL for an OpenAI-compatible API; the server appends `/chat/completions` |
+| `LLM_API_KEY` | Provider credential; store it in Replit Secrets and never in a `VITE_` variable |
+| `LLM_MODEL` | Model identifier accepted by the configured provider |
+
+Apply the AI usage migration along with the existing migrations before using the assistant. Do not run `supabase db push` until the repository is linked to the intended Supabase project.
+
+The server reads only the selected contact and that contact's related company, deals, tasks, and recent activities using the signed-in user's token. It does not accept CRM history from the browser, store prompts or generated replies, send email, or modify records. The app shows a reviewable draft and requires the user to take any external action themselves.
+
+Usage is counted per workspace per UTC day: 10 requests on `free`, 100 on `growth`, and 500 on `pro`. Requests are also limited to 10 per user per 15-minute window. Only active or trialing subscriptions use their stored plan; other or missing subscriptions are treated as `free`. These limits are enforced in Postgres, not only in the UI.
+
+If the AI provider settings are missing or the API is unavailable, generation returns a clear service-unavailable message and does not silently substitute mock content. CRM data and credentials are not included in application logs.
+
 ## Database tests
 
 The SQL tests use temporary test-only accounts and records and roll back their transactions. They cover workspace isolation, cross-workspace references, duplicate and invalid data, tag isolation, and CSV import atomicity. Run them against a local Supabase database after applying migrations:
